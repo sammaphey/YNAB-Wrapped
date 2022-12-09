@@ -21,6 +21,7 @@ from utils import session, BASE_URL
 
 app = typer.Typer()
 SESSION = session()
+BUDGET = None
 
 def get_budget():
 
@@ -31,24 +32,59 @@ def get_budget():
         f"We found {len(budgets)} to analyze! 🚆🚆\nWhich would you like to chose? "
         "(Enter the number next to the name to select.)"
     ).choice([
-        f"{i}, {b['name']}" for i, b in enumerate(budgets)
+        f"({i}) {b['name']}" for i, b in enumerate(budgets)
     ])
     selected_budget = budgets[int(selected_budget)]["id"]
 
-    return SESSION.get(f"{BASE_URL}/budgets/{selected_budget}")
+    BUDGET = SESSION.get(f"{BASE_URL}/budgets/{selected_budget}")
 
 def get_categories():
 
-    budget = get_budget().json()
+    budget = BUDGET.json()
 
     # https://api.youneedabudget.com/#deltas
     server_knowledge = budget["server_knowledge"]
     SESSION.params = {"last_knowledge_of_server": server_knowledge}
 
-    categories = budget["data"]["budget"]["category_groups"]
+    categories = set(budget["data"]["budget"]["category_groups"])
 
     # Allow the user to select the categories to review in specific
-    restricted_groups = ("Internal Master Category", "Hidden Categories")
+    restricted_groups = set("Internal Master Category", "Hidden Categories")
+
+    selected_categories = Message(
+        f"We found {len(categories)} to analyze!\nWhich would you like to get reports on? "
+        "(Enter the number next to the name to select, multiple selections should "
+        "have spaces between them)\nType <A> to select all groups."
+    ).choice([
+        f"({i}) {b['name']}" for i, b in enumerate(categories - restricted_groups)
+    ])
+
+    if selected_categories.lower() == "a" or selected_categories.lower() == "<a>":
+        selected_categories = categories
+    else:
+        selected_categories = {int(i) for i in selected_categories.split(" ")}
+        selected_categories = [c for i, c in enumerate(categories) if i in selected_categories] 
+
+    Message(
+        f"Thanks! A review will be performed on {len(selected_categories)} categories!"
+    ).info()
+
+    return selected_categories
+
+
+def get_years():
+
+    # Get the years to review
+    pass
+
+def get_sub_categories():
+
+    budget = BUDGET.json()
+
+    # Get the category with the highest percent difference
+    # Get the category with the lowest percent difference
+    # Get the category with the highest difference
+    # Get the category with the lowest difference
 
 
 def percent_diff(current, previous):
