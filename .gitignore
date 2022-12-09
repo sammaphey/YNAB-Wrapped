@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Expense Reports
+/wrapped/data/expense-reports/**
+!/wrapped/data/expense-reports/.gitkeep
+
+# Config
+/wrapped/wrapped/config.json
